@@ -251,6 +251,7 @@ function Get-OfflineFileStatus {
             }
 
             foreach ($computer in $computersFound) {
+                $script:RpcFailure = $false
                 if ($parameters.ContainsKey('EnableOfflineFileSyncDebugLogging')) {
                     if ($parameters.ContainsKey('UseCredentials')) {
                         $password = ConvertTo-SecureString "MyPlainTextPassword" -AsPlainText -Force
@@ -291,28 +292,28 @@ function Get-OfflineFileStatus {
 '@
                 }
 
-                # Get-WinEvent is using Windows Event Log remoting so this will not work inside Invoke-Command
-                if ($parameters.ContainsKey('UseCredentials')) {
-                    $password = ConvertTo-SecureString "YourAdminPassword" -AsPlainText -Force
-                    $credentials = New-Object System.Management.Automation.PSCredential ("username", $password)
-                    $events = Get-WinEvent -ComputerName $computer -Credential $credentials -FilterXml $query -Oldest -ErrorAction SilentlyContinue -ErrorVariable Failed
-                }
-                else {
-                    try {
+                try {
+                    # Get-WinEvent is using Windows Event Log remoting so this will not work inside Invoke-Command
+                    if ($parameters.ContainsKey('UseCredentials')) {
+                        $password = ConvertTo-SecureString "YourAdminPassword" -AsPlainText -Force
+                        $credentials = New-Object System.Management.Automation.PSCredential ("username", $password)
+                        $events = Get-WinEvent -ComputerName $computer -Credential $credentials -FilterXml $query -Oldest -ErrorAction SilentlyContinue -ErrorVariable Failed
+                    }
+                    else {
                         $events = Get-WinEvent -ComputerName $computer -FilterXml $query -Oldest -ErrorAction Stop
                     }
-                    catch {
-                        # Get-WinEvent uses Windowed Event Log Remoting so we will automatically fail out on a server we can not reach so need this try catch to tuff the exception and continue
-                        $failedEntry = [PSCustomObject]@{
-                            ComputerName = $computer
-                            Time         = (Get-Date)
-                            Action       = $_.CategoryInfo.Activity
-                            Reason       = $_.CategoryInfo.Reason
-                        }
-                        $null = $failureEntries.add($failedEntry)
-                        $script:RpcFailure = $true
-                        continue
+                }
+                catch {
+                    # Get-WinEvent uses Windowed Event Log Remoting so we will automatically fail out on a server we can not reach so need this try catch to tuff the exception and continue
+                    $failedEntry = [PSCustomObject]@{
+                        ComputerName = $computer
+                        Time         = (Get-Date)
+                        Action       = $_.CategoryInfo.Activity
+                        Reason       = $_.CategoryInfo.Reason
                     }
+                    $null = $failureEntries.add($failedEntry)
+                    $script:RpcFailure = $true
+                    continue
                 }
 
                 # Save event records for processing
