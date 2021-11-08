@@ -159,6 +159,12 @@ function Get-OfflineFileStatus {
 
     .NOTES
         To search a domain this must be executed on a computer that has access to a domain controller or has RSAT installed to run Get-ADComputer
+
+        Firewall port notes - These must be opened on the client inbound
+        -------------------
+        Remove Event Log Management (RPC-EPMAP)
+        Remove Event Log Management (NP-In)
+        Remove Event Log Management (RPC)
     #>
 
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "")]
