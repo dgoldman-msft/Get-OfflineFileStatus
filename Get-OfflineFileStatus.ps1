@@ -257,6 +257,9 @@ function Get-OfflineFileStatus {
             }
 
             foreach ($computer in $computersFound) {
+                # Checking to see if we passed a manual list or a domain found list
+                if ($computer.Name) { $computer = $computer.Name }
+                
                 $script:RpcFailure = $false
                 if ($parameters.ContainsKey('EnableOfflineFileSyncDebugLogging')) {
                     if ($parameters.ContainsKey('UseCredentials')) {
