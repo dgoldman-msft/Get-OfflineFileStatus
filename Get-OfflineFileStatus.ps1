@@ -15,7 +15,7 @@ function Get-TimeStamp {
 
     [cmdletbinding()]
     param()
-    return "[{0:MM/dd/yy} {0:HH:mm:ss}] - " -f (Get-Date)
+    return "[{0:MM/dd/yy} {0:HH:mm:ss}] -" -f (Get-Date)
 }
 
 function Save-Output {
@@ -63,20 +63,18 @@ function Save-Output {
 
     process {
         try {
+            Write-Output $StringObject
             if ($InboundObjects -and $SaveFileOutput.IsPresent) {
-                Write-Output $StringObject
-                [PSCustomObject]$InboundObjects | Export-Csv -Path (Join-Path -Path $EventLogSaveLocation -ChildPath $EventLogSaveFileName) -Append -NoTypeInformation -ErrorAction Stop
+                $InboundObjects | Export-Csv -Path (Join-Path -Path $EventLogSaveLocation -ChildPath $EventLogSaveFileName) -Append -NoTypeInformation -ErrorAction Stop
                 return
             }
 
             if ($FailureObjects -and $SaveFailureOutput.IsPresent) {
-                Write-Output $StringObject
-                [PSCustomObject]$FailureObjects | Export-Csv -Path (Join-Path -Path $LoggingDirectory -ChildPath $FailureLogSaveFileName) -Append -NoTypeInformation -ErrorAction Stop
+                $FailureObjects | Export-Csv -Path (Join-Path -Path $LoggingDirectory -ChildPath $FailureLogSaveFileName) -Append -NoTypeInformation -ErrorAction Stop
                 return
             }
 
             # Console and log file output
-            Write-Output $StringObject
             Out-File -FilePath (Join-Path -Path $LoggingDirectory -ChildPath $LoggingFileName) -InputObject $StringObject -Encoding utf8 -Append -ErrorAction Stop
         }
         catch {
