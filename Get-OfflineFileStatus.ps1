@@ -140,6 +140,9 @@ function Get-OfflineFileStatus {
     .PARAMETER UseCredentials
         Indicate that we need to pass administrator credentials
 
+    .PARAMETER UserName
+        Machine and user name that you want to connect as (Typically an administrator account)
+
     .EXAMPLE
         Get-OfflineFileStatus -DisplayErrors -SaveEventLogsToLocation -Computers Computer1, Computer2
 
@@ -216,7 +219,10 @@ function Get-OfflineFileStatus {
         $SaveEventLogsToLocation,
 
         [switch]
-        $UseCredentials
+        $UseCredentials,
+
+        [string]
+        $UserName = "Computer\User"
     )
 
     begin {
@@ -261,8 +267,8 @@ function Get-OfflineFileStatus {
                 $script:RpcFailure = $false
                 if ($parameters.ContainsKey('EnableOfflineFileSyncDebugLogging')) {
                     if ($parameters.ContainsKey('UseCredentials')) {
-                        $password = ConvertTo-SecureString "MyPlainTextPassword" -AsPlainText -Force
-                        $credentials = New-Object System.Management.Automation.PSCredential ("username", $password)
+                        $password = ConvertTo-SecureString "YourAdminPassword" -AsPlainText -Force
+                        $credentials = New-Object System.Management.Automation.PSCredential ($UserName, $password)
                         if (Invoke-Command -Computer $computer -Credential $credentials -ScriptBlock { wevtutil sl Microsoft-Windows-OfflineFiles/SyncLog /e:true /q } -ErrorAction SilentlyContinue -ErrorVariable Failed ) {
                             Save-Output "$(Get-TimeStamp) Analytic log enabled on $($computer)"
                             return
@@ -272,8 +278,8 @@ function Get-OfflineFileStatus {
 
                 if ($parameters.ContainsKey('DisableOfflineFileSyncDebugLogging')) {
                     if ($parameters.ContainsKey('UseCredentials')) {
-                        $password = ConvertTo-SecureString "MyPlainTextPassword" -AsPlainText -Force
-                        $credentials = New-Object System.Management.Automation.PSCredential ("username", $password)
+                        $password = ConvertTo-SecureString "YourAdminPassword" -AsPlainText -Force
+                        $credentials = New-Object System.Management.Automation.PSCredential ($UserName, $password)
                         if (Invoke-Command -Computer $computer -Credential $credentials -ScriptBlock { wevtutil sl Microsoft-Windows-OfflineFiles/SyncLog /e:false /q } -ErrorAction SilentlyContinue -ErrorVariable Failed ) {
                             Save-Output "$(Get-TimeStamp) Analytic log disabled on $($computer)"
                             return
@@ -303,7 +309,7 @@ function Get-OfflineFileStatus {
                     # Get-WinEvent is using Windows Event Log remoting so this will not work inside Invoke-Command
                     if ($parameters.ContainsKey('UseCredentials')) {
                         $password = ConvertTo-SecureString "YourAdminPassword" -AsPlainText -Force
-                        $credentials = New-Object System.Management.Automation.PSCredential ("username", $password)
+                        $credentials = New-Object System.Management.Automation.PSCredential ($, $password)
                         $events = Get-WinEvent -ComputerName $computer -Credential $credentials -FilterXml $query -Oldest -ErrorAction SilentlyContinue -ErrorVariable Failed
                     }
                     else {
