@@ -29,7 +29,7 @@ function Save-Output {
     .PARAMETER StringObject
         Inbound object to be printed and saved to log
 
-    .PARAMETER InboundObjects
+    .PARAMETER InboundObject
         Inbound objects to be exported to csv
 
     .PARAMETER SaveFileOutput
@@ -49,10 +49,10 @@ function Save-Output {
         $StringObject,
 
         [PSCustomObject]
-        $InboundObjects,
+        $InboundObject,
 
         [PSCustomObject]
-        $FailureObjects,
+        $FailureObject,
 
         [switch]
         $SaveFileOutput,
@@ -64,13 +64,13 @@ function Save-Output {
     process {
         try {
             Write-Output $StringObject
-            if ($InboundObjects -and $SaveFileOutput.IsPresent) {
-                $InboundObjects | Export-Csv -Path (Join-Path -Path $EventLogSaveLocation -ChildPath $EventLogSaveFileName) -Append -NoTypeInformation -ErrorAction Stop
+            if ($InboundObject -and $SaveFileOutput.IsPresent) {
+                $InboundObject | Export-Csv -Path (Join-Path -Path $EventLogSaveLocation -ChildPath $EventLogSaveFileName) -Append -NoTypeInformation -ErrorAction Stop
                 return
             }
 
-            if ($FailureObjects -and $SaveFailureOutput.IsPresent) {
-                $FailureObjects | Export-Csv -Path (Join-Path -Path $LoggingDirectory -ChildPath $FailureLogSaveFileName) -Append -NoTypeInformation -ErrorAction Stop
+            if ($FailureObject -and $SaveFailureOutput.IsPresent) {
+                $FailureObject | Export-Csv -Path (Join-Path -Path $LoggingDirectory -ChildPath $FailureLogSaveFileName) -Append -NoTypeInformation -ErrorAction Stop
                 return
             }
 
@@ -309,7 +309,7 @@ function Get-OfflineFileStatus {
                     # Get-WinEvent is using Windows Event Log remoting so this will not work inside Invoke-Command
                     if ($parameters.ContainsKey('UseCredentials')) {
                         $password = ConvertTo-SecureString "YourAdminPassword" -AsPlainText -Force
-                        $credentials = New-Object System.Management.Automation.PSCredential ($, $password)
+                        $credentials = New-Object System.Management.Automation.PSCredential ($UserName, $password)
                         $events = Get-WinEvent -ComputerName $computer -Credential $credentials -FilterXml $query -Oldest -ErrorAction SilentlyContinue -ErrorVariable Failed
                     }
                     else {
@@ -367,7 +367,7 @@ function Get-OfflineFileStatus {
                         return
                     }
                     else {
-                        Save-Output "$(Get-TimeStamp) Exporting logs to $(Join-Path -Path $EventLogSaveLocation -ChildPath $EventLogSaveFileName). Please wait!" -InboundObjects $completedEntries -SaveFileOutput:$True
+                        Save-Output "$(Get-TimeStamp) Exporting logs to $(Join-Path -Path $EventLogSaveLocation -ChildPath $EventLogSaveFileName). Please wait!" -InboundObject $completedEntries -SaveFileOutput:$True
                     }
                 }
                 else {
@@ -378,7 +378,7 @@ function Get-OfflineFileStatus {
             }
 
             if ($failureEntries.count -gt 0) {
-                Save-Output "$(Get-TimeStamp) WARNINGS / ERRORS: No logs found on some computers!" -FailureObjects $failureEntries -SaveFailureOutput:$True
+                Save-Output "$(Get-TimeStamp) WARNINGS / ERRORS: No logs found on some computers!" -FailureObject $failureEntries -SaveFailureOutput:$True
                 Save-Output "$(Get-TimeStamp) Please check $(Join-Path -Path $LoggingDirectory -ChildPath $LoggingFileName) for more information."
             }
         }
